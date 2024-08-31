@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Financial Market Trends Predictor</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+      /* Add your styles here */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+      header {
+        background-color: #007bff;
+        color: white;
+        padding: 15px 0;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .container {
+        width: 80%;
+        margin: 0 auto;
+        padding: 20px;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        margin-top: 20px;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      .chart-container {
+        margin-top: 20px;
+      }
+      #chart {
+        width: 100%;
+        height: 600px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Financial Market Trends Predictor</h1>
+    </header>
+    <div class="container">
+      <div class="form-group">
+        <label for="ticker">Stock Ticker:</label>
+        <input
+          type="text"
+          id="ticker"
+          value="AAPL"
+          placeholder="Enter stock ticker (e.g., AAPL)"
+        />
+      </div>
+      <div class="form-group">
+        <label for="start-date">Start Date:</label>
+        <input type="date" id="start-date" value="2020-01-01" />
+      </div>
+      <div class="form-group">
+        <label for="end-date">End Date:</label>
+        <input type="date" id="end-date" value="2023-01-01" />
+      </div>
+      <button onclick="fetchData()">Fetch Data</button>
+      <div class="chart-container">
+        <div id="chart"></div>
+      </div>
+    </div>
+    <script>
+      async function fetchData() {
+        const ticker = document.getElementById("ticker").value;
+        const startDate = document.getElementById("start-date").value;
+        const endDate = document.getElementById("end-date").value;
+
+        try {
+          const response = await fetch(
+            `/data?ticker=${ticker}&start_date=${startDate}&end_date=${endDate}`
+          );
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          const data = await response.json();
+
+          // Create traces for the plot
+          const trace1 = {
+            x: data.dates,
+            y: data.close,
+            mode: "lines",
+            name: "Close Price",
+            line: { color: "#1f77b4" },
+          };
+
+          const trace2 = {
+            x: data.dates,
+            y: data.sma_50,
+            mode: "lines",
+            name: "50-Day SMA",
+            line: { color: "#ff7f0e" },
+          };
+
+          const trace3 = {
+            x: data.dates.slice(-data.model_predictions.length),
+            y: data.model_predictions,
+            mode: "lines",
+            name: "Model Predictions",
+            line: { color: "#2ca02c" },
+          };
+
+          const layout = {
+            title: "Stock Prices and Technical Indicators",
+            xaxis: { title: "Date" },
+            yaxis: { title: "Price" },
+            paper_bgcolor: "#f4f4f4",
+            plot_bgcolor: "#fff",
+            margin: { l: 60, r: 10, t: 40, b: 60 },
+          };
+
+          Plotly.newPlot("chart", [trace1, trace2, trace3], layout);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          alert(
+            "Failed to fetch data. Please check the console for more details."
+          );
+        }
+      }
+    </script>
+  </body>
+</html>
